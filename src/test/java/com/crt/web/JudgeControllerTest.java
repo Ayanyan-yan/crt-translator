@@ -4,6 +4,7 @@ import com.crt.ai.AiJudgeService;
 import com.crt.ai.JudgeResult;
 import com.crt.ai.Verdict;
 import com.crt.serial.SerialPortService;
+import com.crt.serial.SerialResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ class JudgeControllerTest {
     void judgeOk() throws Exception {
         when(aiJudgeService.judge("加个深色模式"))
                 .thenReturn(new JudgeResult(Verdict.OK, "{\"verdict\":\"OK\"}"));
-        when(serialPortService.send(Verdict.OK)).thenReturn(true);
+        when(serialPortService.send(Verdict.OK)).thenReturn(new SerialResult(true, true, "ACK:O"));
 
         mockMvc.perform(post("/api/judge")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -44,7 +45,8 @@ class JudgeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.verdict").value("OK"))
                 .andExpect(jsonPath("$.code").value("O"))
-                .andExpect(jsonPath("$.serialSent").value(true));
+                .andExpect(jsonPath("$.serialSent").value(true))
+                .andExpect(jsonPath("$.acknowledged").value(true));
     }
 
     @Test
@@ -52,7 +54,7 @@ class JudgeControllerTest {
     void judgeAbsurd() throws Exception {
         when(aiJudgeService.judge(anyString()))
                 .thenReturn(new JudgeResult(Verdict.ABSURD, "{\"verdict\":\"ABSURD\"}"));
-        when(serialPortService.send(Verdict.ABSURD)).thenReturn(true);
+        when(serialPortService.send(Verdict.ABSURD)).thenReturn(new SerialResult(true, false, ""));
 
         mockMvc.perform(post("/api/judge")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -60,6 +62,7 @@ class JudgeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.verdict").value("ABSURD"))
                 .andExpect(jsonPath("$.code").value("E"))
+                .andExpect(jsonPath("$.acknowledged").value(false))
                 .andExpect(jsonPath("$.message").value("极度离谱，拒绝接入"));
     }
 

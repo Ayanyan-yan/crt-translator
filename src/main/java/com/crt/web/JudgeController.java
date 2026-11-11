@@ -3,6 +3,7 @@ package com.crt.web;
 import com.crt.ai.AiJudgeService;
 import com.crt.ai.JudgeResult;
 import com.crt.serial.SerialPortService;
+import com.crt.serial.SerialResult;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -42,13 +43,14 @@ public class JudgeController {
         }
 
         JudgeResult result = aiJudgeService.judge(text);
-        boolean sent = serialPortService.send(result.verdict());
+        SerialResult serial = serialPortService.send(result.verdict());
         return new JudgeResponse(
                 result.verdict().name(),
                 result.verdict().getCode(),
                 result.verdict().getMessage(),
                 result.raw(),
-                sent);
+                serial.sent(),
+                serial.acked());
     }
 
     @GetMapping("/status")

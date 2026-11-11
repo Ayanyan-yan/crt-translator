@@ -212,15 +212,23 @@ static void MX_I2C1_Init(void)
 void USART1_IRQHandler(void)
 {
     if ((USART1->SR & USART_SR_RXNE) != 0u) {
-        char c = (char)(USART1->DR & 0xFFu);   /* 读 DR 同时清 RXNE */
-
-        /* 回显：TXE 就绪才发，不忙等（中断里不能阻塞；未就绪时丢掉这一字节） */
-        if ((USART1->SR & USART_SR_TXE) != 0u) {
-            USART1->DR = (uint8_t)c;
-        }
-
-        g_cmd = c;
+        g_cmd = (char)(USART1->DR & 0xFFu);   /* 读 DR 同时清 RXNE */
         g_cmd_ready = 1;
+    }
+}
+
+/* ======================== 串口发送（仅主循环调用） ======================== */
+static void uart_send_char(char c)
+{
+    while ((USART1->SR & USART_SR_TXE) == 0u) {
+    }
+    USART1->DR = (uint8_t)c;
+}
+
+static void uart_send_str(const char *s)
+{
+    while (*s != '\0') {
+        uart_send_char(*s++);
     }
 }
 
@@ -248,6 +256,12 @@ int main(void)
         if (g_cmd_ready) {
             char cmd = g_cmd;
             g_cmd_ready = 0;
+
+            /* 先回 ACK（报警会阻塞 1.5s，必须在这之前应答） */
+            uart_send_str("ACK:");
+            uart_send_char(cmd);
+            uart_send_char('\n');
+
             handle_command(cmd);
         }
     }

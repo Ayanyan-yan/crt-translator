@@ -4,6 +4,7 @@ import com.crt.ai.AiJudgeService;
 import com.crt.ai.JudgeResult;
 import com.crt.ai.Verdict;
 import com.crt.serial.SerialPortService;
+import com.crt.serial.SerialResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +49,7 @@ class ApiKeyFilterWebTest {
     void correctKeyPasses() throws Exception {
         when(aiJudgeService.judge(anyString()))
                 .thenReturn(new JudgeResult(Verdict.OK, "{\"verdict\":\"OK\"}"));
-        when(serialPortService.send(Verdict.OK)).thenReturn(true);
+        when(serialPortService.send(Verdict.OK)).thenReturn(new SerialResult(true, true, "ACK:O"));
 
         mockMvc.perform(post("/api/judge")
                         .header("X-API-Key", "secret")

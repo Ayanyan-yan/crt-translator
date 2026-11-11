@@ -81,9 +81,12 @@ CRT_SERIAL_PORT=auto
   "code": "E",
   "message": "极度离谱，拒绝接入",
   "raw": "{\"verdict\":\"ABSURD\",\"reason\":\"一天写完淘宝不现实\"}",
-  "serialSent": true
+  "serialSent": true,
+  "acknowledged": true
 }
 ```
+
+`acknowledged` 表示下位机回了 `ACK:E`，只有它为 `true` 才说明指令被 STM32 真正接收。
 
 ## 安全与限流
 
@@ -112,12 +115,17 @@ curl -X POST http://localhost:8080/api/judge \
 
 ## 串口协议
 
-| 判定 | 字符 | STM32 行为 |
+| 方向 | 内容 | 说明 |
 | --- | --- | --- |
-| 合理 | `O` (0x4F) | 绿灯亮，OLED 显示「需求通过」 |
-| 离谱 | `E` (0x45) | 红灯闪烁 + 蜂鸣器长鸣，OLED 显示「极度离谱，拒绝接入」 |
+| 上位机 → STM32 | `O` (0x4F) 或 `E` (0x45) | 单字符判定指令 |
+| STM32 → 上位机 | `ACK:O\n` / `ACK:E\n` | 收到指令后立即回 ACK，上位机据此判断是否下发成功 |
+
+- 合理 → 绿灯亮，OLED 显示「需求通过」
+- 离谱 → 红灯闪烁 + 蜂鸣器报警，OLED 显示「极度离谱，拒绝接入」
 
 参数：**9600 bps，8 数据位，无校验，1 停止位**。
+
+上位机写完后最多等 400ms 读 ACK；报警会阻塞 1.5s，所以固件把 ACK 放在动作之前发。
 
 ## 测试
 

@@ -253,7 +253,9 @@
             : (data.verdict === 'ABSURD' ? '极度离谱 ❌' : '无法判定 ❓');
         $('message').textContent = data.message;
         $('code').textContent = '串口指令：' + data.code;
-        $('serial').textContent = data.serialSent ? '已下发 STM32' : '串口未连接，未下发';
+        $('serial').textContent = data.acknowledged
+            ? 'STM32 已确认（ACK）'
+            : (data.serialSent ? '已发送，但没收到 ACK' : '串口未连接，未下发');
         $('raw').textContent = data.raw || '(空)';
     }
 

@@ -10,17 +10,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LoggingSerialServiceTest {
 
     @Test
-    @DisplayName("模拟串口：发送 OK 返回成功")
+    @DisplayName("模拟串口：发送 OK 成功并返回 ACK")
     void sendOk() {
-        SerialPortService service = new LoggingSerialService();
-        assertTrue(service.send(Verdict.OK));
+        SerialResult result = new LoggingSerialService().send(Verdict.OK);
+        assertTrue(result.sent());
+        assertTrue(result.acked());
+        assertEquals("ACK:O", result.detail());
     }
 
     @Test
-    @DisplayName("模拟串口：发送 ABSURD 返回成功")
+    @DisplayName("模拟串口：发送 ABSURD 成功并返回 ACK")
     void sendAbsurd() {
-        SerialPortService service = new LoggingSerialService();
-        assertTrue(service.send(Verdict.ABSURD));
+        SerialResult result = new LoggingSerialService().send(Verdict.ABSURD);
+        assertTrue(result.sent());
+        assertTrue(result.acked());
     }
 
     @Test
