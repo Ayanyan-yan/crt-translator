@@ -85,6 +85,31 @@ CRT_SERIAL_PORT=auto
 }
 ```
 
+## 安全与限流
+
+| 保护 | 行为 | 配置 |
+| --- | --- | --- |
+| **长度限制** | 单条需求最多 2000 字，超出返回 `400` | `CRT_MAX_TEXT_LENGTH` |
+| **限流** | 每个 IP 每 60 秒最多 10 次，超出返回 `429` + `Retry-After` | `CRT_RATE_LIMIT` / `CRT_RATE_WINDOW` |
+| **鉴权** | 配置后 `/api/**` 必须带 `X-API-Key`，否则 `401` | `CRT_API_KEY`（留空则不启用） |
+
+启用鉴权示例：
+
+```powershell
+setx CRT_API_KEY "你的访问口令"
+```
+
+请求时带上：
+
+```bash
+curl -X POST http://localhost:8080/api/judge \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: 你的访问口令" \
+  -d '{"text":"一天写完淘宝"}'
+```
+
+网页端在输入框下方有「访问口令」输入框，填一次会记在 sessionStorage 里。
+
 ## 串口协议
 
 | 判定 | 字符 | STM32 行为 |

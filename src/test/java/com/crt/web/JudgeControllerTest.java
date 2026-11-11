@@ -74,6 +74,18 @@ class JudgeControllerTest {
     }
 
     @Test
+    @DisplayName("超长需求（>2000 字）→ 400")
+    void tooLongTextIsRejected() throws Exception {
+        String longText = "a".repeat(2001);
+
+        mockMvc.perform(post("/api/judge")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"" + longText + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("需求内容过长，最多 2000 字"));
+    }
+
+    @Test
     @DisplayName("AI 调用失败（如未配置 Key）→ 502 + 提示")
     void aiFailureReturnsBadGateway() throws Exception {
         when(aiJudgeService.judge(anyString()))

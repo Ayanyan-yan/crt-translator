@@ -119,6 +119,29 @@
             max-height: 180px;
             overflow: auto;
         }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .meta-row input {
+            flex: 0 1 300px;
+            background: #0d1424;
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .meta-row input:focus { border-color: #3d5a9a; }
     </style>
 </head>
 <body>
@@ -131,7 +154,12 @@
 
     <section class="panel">
         <label for="req">产品经理说：</label>
-        <textarea id="req" placeholder="例如：明天上线，一天写完淘宝，还要支持元宇宙"></textarea>
+        <textarea id="req" maxlength="2000" placeholder="例如：明天上线，一天写完淘宝，还要支持元宇宙"></textarea>
+
+        <div class="meta-row">
+            <span id="count">0 / 2000</span>
+            <input id="key" type="password" autocomplete="off" placeholder="访问口令 X-API-Key（未启用鉴权可留空）">
+        </div>
 
         <div class="row">
             <button id="send" class="primary">🚀 判定需求</button>
@@ -187,13 +215,22 @@
         $('send').textContent = 'AI 判定中…';
 
         try {
+            const headers = {'Content-Type': 'application/json'};
+            const apiKey = $('key').value.trim();
+            if (apiKey) headers['X-API-Key'] = apiKey;
+
             const resp = await fetch('/api/judge', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers,
                 body: JSON.stringify({text})
             });
-            const data = await resp.json();
+
+            let data = {};
+            try { data = await resp.json(); } catch (ignored) { /* 非 JSON 响应 */ }
+
             if (!resp.ok) {
+                if (resp.status === 401) throw new Error('需要访问口令（X-API-Key），请在上方输入');
+                if (resp.status === 429) throw new Error('请求太频繁，请稍后再试');
                 throw new Error(data.message || data.error || ('HTTP ' + resp.status));
             }
             show(data);
@@ -223,13 +260,27 @@
     $('send').addEventListener('click', () => judge($('req').value));
     $('clear').addEventListener('click', () => {
         $('req').value = '';
+        updateCount();
         $('result').classList.add('hidden');
         $('req').focus();
     });
 
+    // 字数统计 + 访问口令记忆
+    const MAX_LEN = 2000;
+    function updateCount() {
+        $('count').textContent = $('req').value.length + ' / ' + MAX_LEN;
+    }
+    $('req').addEventListener('input', updateCount);
+    $('key').value = sessionStorage.getItem('crt_api_key') || '';
+    $('key').addEventListener('input', () => {
+        sessionStorage.setItem('crt_api_key', $('key').value);
+    });
+    updateCount();
+
     document.querySelectorAll('.chips button').forEach((btn) => {
         btn.addEventListener('click', () => {
             $('req').value = btn.dataset.text;
+            updateCount();
             judge($('req').value);
         });
     });
@@ -258,6 +309,7 @@
 
         recognition.onresult = (event) => {
             $('req').value = event.results[0][0].transcript;
+            updateCount();
         };
         recognition.onerror = (event) => alert('语音识别失败：' + event.error);
         recognition.onend = () => {
