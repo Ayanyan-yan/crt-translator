@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  config:
+    # 自动读取项目根目录的 .env（IDEA 直接运行也能拿到 API Key）
+    import: optional:file:./.env[.properties]
+
+crt:
+  ai:
+    # DeepSeek（OpenAI 兼容协议）
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    api-key: ${DEEPSEEK_API_KEY:}
+    model: ${DEEPSEEK_MODEL:deepseek-chat}
+    timeout-seconds: 30
+  serial:
+    # true = 用真实串口（jSerialComm）；false = 只打日志，方便没接硬件时演示
+    enabled: ${CRT_SERIAL_ENABLED:false}
+    # 串口号；填 auto 表示自动选择第一个可用串口
+    port: ${CRT_SERIAL_PORT:auto}
+    baud-rate: ${CRT_SERIAL_BAUD:9600}
+
+logging:
+  level:
+    com.crt: INFO

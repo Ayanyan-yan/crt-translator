@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>赛博需求翻译机 · CRT</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --card: #141b2e;
+            --line: #26304a;
+            --text: #e8edf7;
+            --muted: #8b96ad;
+            --green: #2ecc71;
+            --red: #ff4d5e;
+            --amber: #ffc857;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(1200px 600px at 50% -10%, #1b2540 0%, var(--bg) 55%);
+            color: var(--text);
+            font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 40px 16px;
+        }
+
+        main { width: 100%; max-width: 760px; }
+
+        header h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: 1px; }
+        header h1 span { color: var(--amber); font-size: 16px; margin-left: 8px; }
+        .sub { color: var(--muted); margin: 0 0 14px; }
+
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            border: 1px solid var(--line);
+            color: var(--muted);
+        }
+        .status.ok { color: var(--green); border-color: #1f6b42; }
+        .status.warn { color: var(--amber); border-color: #6b5a1f; }
+
+        .panel {
+            margin-top: 22px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        label { display: block; color: var(--muted); margin-bottom: 8px; }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            background: #0d1424;
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 15px;
+            line-height: 1.6;
+            outline: none;
+        }
+        textarea:focus { border-color: #3d5a9a; }
+
+        .row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+        button {
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: #1a2238;
+            color: var(--text);
+            padding: 9px 16px;
+            border-radius: 9px;
+            font-size: 14px;
+            transition: .15s;
+        }
+        button:hover { border-color: #3d5a9a; }
+        button:disabled { opacity: .55; cursor: not-allowed; }
+        button.primary { background: #2d6cdf; border-color: #2d6cdf; font-weight: 600; }
+
+        .chips { margin-top: 12px; color: var(--muted); font-size: 13px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .chips button { padding: 5px 10px; font-size: 12px; }
+
+        .result {
+            margin-top: 18px;
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid var(--line);
+            background: var(--card);
+        }
+        .result.hidden { display: none; }
+        .result.ok { border-color: #1f6b42; box-shadow: 0 0 30px rgba(46, 204, 113, .12); }
+        .result.bad { border-color: #7a2430; box-shadow: 0 0 30px rgba(255, 77, 94, .15); }
+
+        .verdict { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+        .result.ok .verdict { color: var(--green); }
+        .result.bad .verdict { color: var(--red); }
+
+        .message { color: var(--text); margin-bottom: 10px; }
+        .meta { color: var(--muted); font-size: 13px; display: flex; gap: 16px; }
+
+        details { margin-top: 14px; color: var(--muted); font-size: 13px; }
+        details pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #0d1424;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 180px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>赛博需求翻译机 <span>CRT</span></h1>
+        <p class="sub">把产品经理的离谱需求交给 AI，让 STM32 告诉你它有多离谱。</p>
+        <div id="status" class="status">串口：检测中…</div>
+    </header>
+
+    <section class="panel">
+        <label for="req">产品经理说：</label>
+        <textarea id="req" placeholder="例如：明天上线，一天写完淘宝，还要支持元宇宙"></textarea>
+
+        <div class="row">
+            <button id="send" class="primary">🚀 判定需求</button>
+            <button id="mic">🎤 语音输入</button>
+            <button id="clear">清空</button>
+        </div>
+
+        <div class="chips">
+            <span>试试：</span>
+            <button data-text="一天写完淘宝，明天上线">一天写完淘宝</button>
+            <button data-text="给登录页加一个深色模式">加个深色模式</button>
+            <button data-text="做一个永动机，不需要任何能量输入">永动机</button>
+        </div>
+    </section>
+
+    <section id="result" class="result hidden">
+        <div class="verdict" id="verdict"></div>
+        <div class="message" id="message"></div>
+        <div class="meta">
+            <span id="code"></span>
+            <span id="serial"></span>
+        </div>
+        <details>
+            <summary>AI 原始输出</summary>
+            <pre id="raw"></pre>
+        </details>
+    </section>
+</main>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+    let busy = false;
+
+    async function refreshStatus() {
+        try {
+            const resp = await fetch('/api/status');
+            const data = await resp.json();
+            $('status').textContent = data.serialOpen ? '串口：已连接 ✅' : '串口：未连接（模拟模式）';
+            $('status').className = 'status ' + (data.serialOpen ? 'ok' : 'warn');
+        } catch (e) {
+            $('status').textContent = '串口：状态未知';
+        }
+    }
+
+    async function judge(text) {
+        if (busy) return;
+        if (!text || !text.trim()) {
+            alert('先输入一条需求吧');
+            return;
+        }
+        busy = true;
+        $('send').disabled = true;
+        $('send').textContent = 'AI 判定中…';
+
+        try {
+            const resp = await fetch('/api/judge', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text})
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                throw new Error(data.message || data.error || ('HTTP ' + resp.status));
+            }
+            show(data);
+        } catch (e) {
+            alert('判定失败：' + e.message);
+        } finally {
+            busy = false;
+            $('send').disabled = false;
+            $('send').textContent = '🚀 判定需求';
+        }
+    }
+
+    function show(data) {
+        const box = $('result');
+        box.classList.remove('hidden', 'ok', 'bad');
+        if (data.verdict === 'OK') box.classList.add('ok');
+        if (data.verdict === 'ABSURD') box.classList.add('bad');
+
+        $('verdict').textContent = data.verdict === 'OK' ? '合理 ✅'
+            : (data.verdict === 'ABSURD' ? '极度离谱 ❌' : '无法判定 ❓');
+        $('message').textContent = data.message;
+        $('code').textContent = '串口指令：' + data.code;
+        $('serial').textContent = data.serialSent ? '已下发 STM32' : '串口未连接，未下发';
+        $('raw').textContent = data.raw || '(空)';
+    }
+
+    $('send').addEventListener('click', () => judge($('req').value));
+    $('clear').addEventListener('click', () => {
+        $('req').value = '';
+        $('result').classList.add('hidden');
+        $('req').focus();
+    });
+
+    document.querySelectorAll('.chips button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            $('req').value = btn.dataset.text;
+            judge($('req').value);
+        });
+    });
+
+    $('req').addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'Enter') judge($('req').value);
+    });
+
+    // 语音输入（Chrome / Edge 支持 Web Speech API）
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+
+    $('mic').addEventListener('click', () => {
+        if (!SpeechRecognition) {
+            alert('当前浏览器不支持语音识别，请使用 Chrome / Edge');
+            return;
+        }
+        if (recognition) {
+            recognition.stop();
+            return;
+        }
+        recognition = new SpeechRecognition();
+        recognition.lang = 'zh-CN';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event) => {
+            $('req').value = event.results[0][0].transcript;
+        };
+        recognition.onerror = (event) => alert('语音识别失败：' + event.error);
+        recognition.onend = () => {
+            recognition = null;
+            $('mic').textContent = '🎤 语音输入';
+        };
+
+        recognition.start();
+        $('mic').textContent = '⏹ 正在听…';
+    });
+
+    refreshStatus();
+    setInterval(refreshStatus, 5000);
+</script>
+</body>
+</html>
