@@ -20,6 +20,9 @@
 #define BUZZER_ON        GPIO_PIN_RESET
 #define BUZZER_OFF       GPIO_PIN_SET
 
+// 串口波特率（上位机 CRT_SERIAL_BAUD 需一致）
+#define CRT_BAUD_RATE    9600u
+
 /* ======================== 串口 ======================== */
 I2C_HandleTypeDef hi2c1;
 
@@ -173,7 +176,7 @@ static void MX_USART1_Init(void)
     gpio.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOA, &gpio);
 
-    USART1->BRR = (uint16_t)((SystemCoreClock + 4800u) / 9600u);  /* 9600 bps */
+    USART1->BRR = (uint16_t)((SystemCoreClock + (CRT_BAUD_RATE / 2u)) / CRT_BAUD_RATE);
     USART1->CR1 = USART_CR1_UE | USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE;
 
     HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
