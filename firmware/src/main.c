@@ -214,10 +214,10 @@ void USART1_IRQHandler(void)
     if ((USART1->SR & USART_SR_RXNE) != 0u) {
         char c = (char)(USART1->DR & 0xFFu);   /* 读 DR 同时清 RXNE */
 
-        /* 回显：收到什么就发回什么，用于确认 PC ↔ 板子 的串口是通的 */
-        while ((USART1->SR & USART_SR_TXE) == 0u) {
+        /* 回显：TXE 就绪才发，不忙等（中断里不能阻塞；未就绪时丢掉这一字节） */
+        if ((USART1->SR & USART_SR_TXE) != 0u) {
+            USART1->DR = (uint8_t)c;
         }
-        USART1->DR = (uint8_t)c;
 
         g_cmd = c;
         g_cmd_ready = 1;
