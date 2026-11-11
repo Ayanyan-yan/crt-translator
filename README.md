@@ -125,3 +125,13 @@ src/main/resources/
 └── static/index.html            # 前端页面（文字 + 语音输入）
 src/test/java/com/crt/           # 单元测试与接口测试
 ```
+
+## 作者与致谢
+
+- **作者**：铵盐（GitHub [@Ayanyan-yan](https://github.com/Ayanyan-yan)）
+- **AI 协作**：[DeepSeek](https://www.deepseek.com) —— 代码生成、调试与文档辅助，所有改动均经人工审查后合入
+
+## 许可证
+
+本项目基于 [MIT License](LICENSE) 开源。
+
